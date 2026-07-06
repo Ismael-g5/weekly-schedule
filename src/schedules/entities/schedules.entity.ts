@@ -3,5 +3,5 @@ export class SchedulesEntity {
     title: string;
     description: string;
     date_initial: Date;
-    date_end: Date;
+    date_end! Date;
 }
