@@ -1,6 +1,7 @@
-export class UpdateSchedulesDto {
-    readonly title: string;
-    readonly description: string;
-    readonly date_initial: Date;
-    readonly date_end: Date;
-}
+//import { IsDate, IsNotEmpty, IsOptional, IsString } from "class-validator";
+
+import { PartialType } from "@nestjs/mapped-types";
+import { CreateSchedulesDto } from "./create-schedules.dto";
+
+export class UpdateSchedulesDto extends PartialType(CreateSchedulesDto) {}
+//classe extendida de createschedulesdto

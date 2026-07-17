@@ -1,7 +1,17 @@
+import { IsDate, IsNotEmpty, IsString } from "class-validator";
+
 export class CreateSchedulesDto {
+    @IsString()
+    @IsNotEmpty()
     readonly title?: string;
+    
+    @IsString()
     readonly description?: string;
+    
+    @IsDate()
     readonly date_initial?: Date;
+    
+    @IsDate()
     readonly date_end?: Date;
 }
 
