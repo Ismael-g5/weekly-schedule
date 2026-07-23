@@ -1,69 +1,170 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+// src/schedules/schedules.service.ts
+import { HttpException, HttpStatus, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { SchedulesEntity } from './entities/schedules.entity';
-// o service é responsável por fazer a lógica de negócio, ele vai ser chamado pelo controller, que é o responsável por receber as requisições e enviar as respostas
+import { CreateSchedulesDto } from './dto/create-schedules.dto';
+import { UpdateSchedulesDto } from './dto/update-schedules.dto';
+
 @Injectable()
 export class SchedulesService {
-    private lastId = 1;
-    private schedules: SchedulesEntity[] = [
-        {
-            id: 1,
-            title: 'Schedule 1',
-            description: 'Description 1',
-            date_initial: new Date('2023-01-01'),
-            date_end: new Date('2023-01-02')
-        }
-    ];
+    constructor(
+        @InjectRepository(SchedulesEntity)
+        private schedulesRepository: Repository<SchedulesEntity>,
+    ) {}
 
-    findAll() {
-        return this.schedules;
+    // Buscar todos os agendamentos
+    async findAll(): Promise<SchedulesEntity[]> {
+        return this.schedulesRepository.find({
+            order: {
+                date_initial: 'ASC',
+            },
+        });
     }
 
-    findOne(id: string){    
-       const schedule =  this.schedules.find(item => item.id === +id); // o + converte number em string, e o find vai procurar o item que tenha o id igual ao id passado como parâmetro
-        if (schedule) return schedule;
-        throw new HttpException('Schedule not found', HttpStatus.NOT_FOUND); // caso não encontre o item, lança uma exceção com o status 404
-        // ou NotFoundException('Schedule not found'); // caso não encontre o item, lança uma exceção com o status 404
-    }
-
-    create(body: any){
-        this.lastId++;
-        const id = this.lastId;
-        const newSchedule = {
-            id,
-            ...body,
-        }
-        this.schedules.push(newSchedule);
-
-        return newSchedule
-    }
-
-    update(id: string, body: any){
-        const scheduleIndexUpdate = this.schedules.findIndex(
-            item => item.id === +id
-        );
-
-        if(scheduleIndexUpdate >= 0){
-           const updatedSchedule = {
-            ...this.schedules[scheduleIndexUpdate],
-           };
+    // Buscar um agendamento por ID
+    async findOne(id: number): Promise<SchedulesEntity> {
+        const schedule = await this.schedulesRepository.findOne({
+            where: { id },
+        });
         
-           this.schedules[scheduleIndexUpdate] = {
-            ...updatedSchedule,
-            ...body,
-           };
-           return this.schedules[scheduleIndexUpdate];
+        if (!schedule) {
+            throw new NotFoundException(`Agendamento com ID ${id} não encontrado`);
         }
-        //return { message: 'Schedule not found' };
+        
+        return schedule;
     }
 
-    remove(id: string){
-        const scheduleIndex = this.schedules.findIndex(
-            item => item.id === +id
-        );
+    // Criar novo agendamento
+    async create(createScheduleDto: CreateSchedulesDto): Promise<SchedulesEntity> {
+        // Valida se os campos obrigatórios estão presentes
+        if (!createScheduleDto.title) {
+            throw new BadRequestException('Título é obrigatório');
+        }
 
-        if(scheduleIndex >= 0){
-           this.schedules.splice(scheduleIndex, 1); // splice remove o item do array, o primeiro parâmetro é o índice do item que queremos remover, e o segundo parâmetro é a quantidade de itens que queremos remover
+        if (!createScheduleDto.date_initial) {
+            throw new BadRequestException('Data inicial é obrigatória');
+        }
+
+        if (!createScheduleDto.date_end) {
+            throw new BadRequestException('Data final é obrigatória');
+        }
+
+        // Converte as datas de string para Date com verificação de undefined
+        const dateInitial = new Date(createScheduleDto.date_initial);
+        const dateEnd = new Date(createScheduleDto.date_end);
+
+        // Verifica se as datas são válidas
+        if (isNaN(dateInitial.getTime())) {
+            throw new BadRequestException('Data inicial inválida');
+        }
+
+        if (isNaN(dateEnd.getTime())) {
+            throw new BadRequestException('Data final inválida');
+        }
+
+        // Valida se a data inicial é menor que a data final
+        if (dateInitial >= dateEnd) {
+            throw new BadRequestException('Data inicial deve ser menor que a data final');
+        }
+
+        const scheduleData = {
+            title: createScheduleDto.title,
+            description: createScheduleDto.description || '',
+            date_initial: dateInitial,
+            date_end: dateEnd,
+        };
+
+        const newSchedule = this.schedulesRepository.create(scheduleData);
+        return this.schedulesRepository.save(newSchedule);
+    }
+
+    // Atualizar um agendamento
+    async update(id: number, updateScheduleDto: UpdateSchedulesDto): Promise<SchedulesEntity> {
+        // Verifica se o agendamento existe
+        await this.findOne(id);
+
+        // Prepara os dados para atualização
+        const updateData: any = {};
+
+        // Atualiza apenas os campos fornecidos
+        if (updateScheduleDto.title !== undefined) {
+            updateData.title = updateScheduleDto.title;
+        }
+
+        if (updateScheduleDto.description !== undefined) {
+            updateData.description = updateScheduleDto.description;
+        }
+
+        // Converte e valida datas se fornecidas
+        if (updateScheduleDto.date_initial !== undefined) {
+            const dateInitial = new Date(updateScheduleDto.date_initial);
+            if (isNaN(dateInitial.getTime())) {
+                throw new BadRequestException('Data inicial inválida');
+            }
+            updateData.date_initial = dateInitial;
+        }
+
+        if (updateScheduleDto.date_end !== undefined) {
+            const dateEnd = new Date(updateScheduleDto.date_end);
+            if (isNaN(dateEnd.getTime())) {
+                throw new BadRequestException('Data final inválida');
+            }
+            updateData.date_end = dateEnd;
+        }
+
+        // Valida datas se ambas foram fornecidas
+        if (updateData.date_initial && updateData.date_end) {
+            if (updateData.date_initial >= updateData.date_end) {
+                throw new BadRequestException('Data inicial deve ser menor que a data final');
+            }
+        }
+
+        // Se não há dados para atualizar
+        if (Object.keys(updateData).length === 0) {
+            throw new BadRequestException('Nenhum dado para atualizar');
+        }
+
+        // Atualiza o registro
+        await this.schedulesRepository.update(id, updateData);
+        
+        // Retorna o registro atualizado
+        return this.findOne(id);
+    }
+
+    // Remover um agendamento
+    async remove(id: number): Promise<void> {
+        const result = await this.schedulesRepository.delete(id);
+        
+        if (result.affected === 0) {
+            throw new NotFoundException(`Agendamento com ID ${id} não encontrado`);
         }
     }
 
+    // Métodos adicionais úteis
+
+    // Buscar agendamentos por período
+    async findByDateRange(startDate: Date, endDate: Date): Promise<SchedulesEntity[]> {
+        return this.schedulesRepository
+            .createQueryBuilder('schedule')
+            .where('schedule.date_initial >= :startDate', { startDate })
+            .andWhere('schedule.date_end <= :endDate', { endDate })
+            .orderBy('schedule.date_initial', 'ASC')
+            .getMany();
+    }
+
+    // Buscar agendamentos futuros
+    async findUpcoming(): Promise<SchedulesEntity[]> {
+        const now = new Date();
+        return this.schedulesRepository
+            .createQueryBuilder('schedule')
+            .where('schedule.date_initial >= :now', { now })
+            .orderBy('schedule.date_initial', 'ASC')
+            .getMany();
+    }
+
+    // Contar agendamentos
+    async count(): Promise<number> {
+        return this.schedulesRepository.count();
+    }
 }

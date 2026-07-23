@@ -1,7 +1,5 @@
-//import { IsDate, IsNotEmpty, IsOptional, IsString } from "class-validator";
-
+// src/schedules/dto/update-schedules.dto.ts
 import { PartialType } from "@nestjs/mapped-types";
 import { CreateSchedulesDto } from "./create-schedules.dto";
 
 export class UpdateSchedulesDto extends PartialType(CreateSchedulesDto) {}
-//classe extendida de createschedulesdto
