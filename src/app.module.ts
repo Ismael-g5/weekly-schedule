@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { SchedulesModule } from './schedules/schedules.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypesWorkModule } from './types_work/types_work.module';
 
 @Module({
   imports: [
@@ -16,28 +17,23 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        type: 'mysql' as const, // <- Adicione 'as const' aqui
-        host: configService.get<string>('DB_HOST', 'localhost'),
-        port: configService.get<number>('DB_PORT', 3306),
-        username: configService.get<string>('DB_USER', 'root'),
-        password: configService.get<string>('DB_PASSWORD', ''),
-        database: configService.get<string>('DB_NAME', 'agenda_db'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
-        logging: true,
-        // Adicione estas opções extras
-        extra: {
-          connectionLimit: 10,
-        },
-        // Força o uso do driver
-        driver: require('mysql2'),
+        type: 'mysql' as const,
+        host: configService.getOrThrow<string>('DB_HOST'),
+        port: Number(configService.getOrThrow<string>('DB_PORT')),
+        username: configService.getOrThrow<string>('DB_USER'),
+        password: configService.getOrThrow<string>('DB_PASSWORD'),
+        database: configService.getOrThrow<string>('DB_NAME'),
+        autoLoadEntities: true,
+        synchronize: configService.get<string>('NODE_ENV') !== 'production',
+        logging: configService.get<string>('NODE_ENV') === 'development',
       }),
       inject: [ConfigService],
     }),
 
     SchedulesModule,
+    TypesWorkModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
