@@ -6,10 +6,10 @@ export class TypesWork {
     @PrimaryGeneratedColumn()
     id?: number;
 
-    @Column()
+    @Column({unique: true})
     name?: string;
 
-    @Column()
+    @Column({unique: true})
     type_event?: string;
 
     @CreateDateColumn()

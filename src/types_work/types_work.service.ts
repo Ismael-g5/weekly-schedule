@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTypesWorkDto } from './dto/create-types_work.dto';
 import { UpdateTypesWorkDto } from './dto/update-types_work.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -22,21 +22,52 @@ export class TypesWorkService {
     await this.typesWorkRepository.save(newTypesWork);
     return newTypesWork;
 
+  } catch(error) {
+    //erro de repetição
+    if (error.code === '23505') {
+      throw new ConflictException(`Erro ao criar o tipo de trabalho: Nome ou tipo de evento já existe.`);
+    }
+  }
+  async findAll() {
+    const typesWork = await this.typesWorkRepository.find({
+      order: {
+        id: 'desc',
+      },
+    });
+    return typesWork;
   }
 
-  findAll() {
-    return `This action returns all typesWork`;
+  async findOne(id: number) {
+    const typesWork = await this.typesWorkRepository.findOne({ where: { id } });
+    if (!typesWork) {
+      throw new NotFoundException(`Erro ao encontrar o tipo de trabalho: Tipo de trabalho não encontrado.`);
+    }
+    return typesWork;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} typesWork`;
+ async update(id: number, updateTypesWorkDto: UpdateTypesWorkDto) {
+  const dataTypesWork = {
+    name: updateTypesWorkDto?.name,
+    type_event: updateTypesWorkDto?.type_event,
+  };
+  
+  const typesWork = await this.typesWorkRepository.preload({ 
+      id,
+      ...dataTypesWork,
+
+     });
+     if (!typesWork) {
+      throw new NotFoundException(`Erro ao atualizar o tipo de trabalho: Tipo de trabalho não encontrado.`);
+    }
+    return this.typesWorkRepository.save(typesWork);
+
   }
 
-  update(id: number, updateTypesWorkDto: UpdateTypesWorkDto) {
-    return `This action updates a #${id} typesWork`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} typesWork`;
+  async remove(id: number) {
+   const typesWork = await this.typesWorkRepository.findOne({ where: { id } });
+    if (!typesWork) {
+      throw new NotFoundException(`Erro ao deletar o tipo de trabalho: Tipo de trabalho não encontrado.`);
+    }
+    return this.typesWorkRepository.remove(typesWork);
   }
 }
