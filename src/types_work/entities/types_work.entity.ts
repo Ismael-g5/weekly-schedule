@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Schedules } from 'src/schedules/entities/schedules.entity';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class TypesWork {
@@ -11,6 +12,9 @@ export class TypesWork {
 
     @Column({unique: true})
     type_event?: string;
+
+    @OneToMany(() => Schedules, (schedule) => schedule.type_work)
+    schedules?: Schedules[];
 
     @CreateDateColumn()
     created_at?: Date;

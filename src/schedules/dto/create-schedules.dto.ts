@@ -1,21 +1,19 @@
-// src/schedules/dto/create-schedules.dto.ts
-import { IsDate, IsNotEmpty, IsString, IsOptional, IsDateString } from "class-validator";
-import { Type } from 'class-transformer';
+import { IsNotEmpty } from "class-validator";
 
 export class CreateSchedulesDto {
-    @IsString()
-    @IsNotEmpty({ message: 'Título é obrigatório' })
-    readonly title?: string;
-    
-    @IsString()
-    @IsOptional()
-    readonly description?: string;
-    
-    @IsDateString({}, { message: 'Data inicial deve ser uma data válida' })
-    @IsNotEmpty({ message: 'Data inicial é obrigatória' })
-    readonly date_initial?: string; // Usando string para data ISO
-    
-    @IsDateString({}, { message: 'Data final deve ser uma data válida' })
-    @IsNotEmpty({ message: 'Data final é obrigatória' })
-    readonly date_end?: string; // Usando string para data ISO
+
+    @IsNotEmpty()
+    title?: string;
+
+    description?: string;
+
+    @IsNotEmpty()
+    date_initial?: string;
+
+    @IsNotEmpty()
+    date_end?: string;
+
+    @IsNotEmpty()
+    type_work_id?: number;
+
 }

@@ -1,32 +1,32 @@
-// src/schedules/entities/schedules.entity.ts
-import { 
-  Entity, 
-  Column, 
-  PrimaryGeneratedColumn, 
-  CreateDateColumn, 
-  UpdateDateColumn 
-} from 'typeorm';
+import { TypesWork } from 'src/types_work/entities/types_work.entity';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity('schedules') // Nome da tabela no banco
-export class SchedulesEntity {
-  @PrimaryGeneratedColumn()
-  id?: number;
+@Entity()
+export class Schedules {
 
-  @Column({ length: 255 })
-  title?: string;
+    @PrimaryGeneratedColumn()
+    id?: number;
 
-  @Column({ type: 'text', nullable: true })
-  description?: string;
+    @Column()
+    title?: string;
 
-  @Column({ name: 'date_initial', type: 'datetime' })
-  date_initial?: Date;
+    @Column({ nullable: true })
+    description?: string;
 
-  @Column({ name: 'date_end', type: 'datetime' })
-  date_end?: Date;
+    @Column({ type: 'datetime' })
+    date_initial?: Date;
 
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt?: Date;
+    @Column({ type: 'datetime' })
+    date_end?: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt?: Date;
+    @ManyToOne(() => TypesWork, (typeWork) => typeWork.schedules)
+    @JoinColumn({ name: 'type_work_id' })
+    type_work?: TypesWork;
+
+    @CreateDateColumn()
+    created_at?: Date;
+
+    @UpdateDateColumn()
+    updated_at?: Date;
+
 }

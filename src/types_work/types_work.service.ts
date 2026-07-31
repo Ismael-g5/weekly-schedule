@@ -14,18 +14,19 @@ export class TypesWorkService {
   ) { }
 
   async create(createTypesWorkDto: CreateTypesWorkDto) {
-    const typesWork = {
-      name: createTypesWorkDto.name,
-      type_event: createTypesWorkDto.type_event,
-    };
-    const newTypesWork = this.typesWorkRepository.create(typesWork);
-    await this.typesWorkRepository.save(newTypesWork);
-    return newTypesWork;
-
-  } catch(error) {
-    //erro de repetição
-    if (error.code === '23505') {
-      throw new ConflictException(`Erro ao criar o tipo de trabalho: Nome ou tipo de evento já existe.`);
+    try {
+      const typesWork = {
+        name: createTypesWorkDto.name,
+        type_event: createTypesWorkDto.type_event,
+      };
+      const newTypesWork = this.typesWorkRepository.create(typesWork);
+      await this.typesWorkRepository.save(newTypesWork);
+      return newTypesWork;
+    } catch (error: unknown) {
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505') {
+        throw new ConflictException(`Erro ao criar o tipo de trabalho: Nome ou tipo de evento já existe.`);
+      }
+      throw error;
     }
   }
   async findAll() {
