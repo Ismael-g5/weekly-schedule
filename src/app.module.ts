@@ -6,6 +6,7 @@ import { SchedulesModule } from './schedules/schedules.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypesWorkModule } from './types_work/types_work.module';
+import { ScheduleItemsModule } from './schedule_items/schedule_items.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { TypesWorkModule } from './types_work/types_work.module';
 
     SchedulesModule,
     TypesWorkModule,
+    ScheduleItemsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

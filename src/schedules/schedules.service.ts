@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSchedulesDto } from './dto/create-schedules.dto';
 import { UpdateSchedulesDto } from './dto/update-schedules.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,36 +14,39 @@ export class SchedulesService {
   ) { }
 
   async create(createSchedulesDto: CreateSchedulesDto) {
-    try {
-      const schedules = {
-        title: createSchedulesDto.title,
-        description: createSchedulesDto.description,
-        date_initial: createSchedulesDto.date_initial,
-        date_end: createSchedulesDto.date_end,
-        type_work: { id: createSchedulesDto.type_work_id },
-      };
-      const newSchedules = this.schedulesRepository.create(schedules);
-      await this.schedulesRepository.save(newSchedules);
-      return newSchedules;
-    } catch (error: unknown) {
-      if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505') {
-        throw new ConflictException(`Erro ao criar o agendamento: Já existe.`);
-      }
-      throw error;
-    }
+    const schedules = {
+      title: createSchedulesDto.title,
+      description: createSchedulesDto.description,
+      date_initial: createSchedulesDto.date_initial,
+      date_end: createSchedulesDto.date_end,
+    };
+    const newSchedules = this.schedulesRepository.create(schedules);
+    await this.schedulesRepository.save(newSchedules);
+    return newSchedules;
   }
 
   async findAll() {
-    const schedules = await this.schedulesRepository.find({
+    return this.schedulesRepository.find({
+      relations: {
+        items: {
+          type_work: true,
+        },
+      },
       order: {
         id: 'desc',
       },
     });
-    return schedules;
   }
 
   async findOne(id: number) {
-    const schedules = await this.schedulesRepository.findOne({ where: { id } });
+    const schedules = await this.schedulesRepository.findOne({
+      where: { id },
+      relations: {
+        items: {
+          type_work: true,
+        },
+      },
+    });
     if (!schedules) {
       throw new NotFoundException(`Erro ao encontrar o agendamento: Agendamento não encontrado.`);
     }
@@ -56,9 +59,6 @@ export class SchedulesService {
       description: updateSchedulesDto?.description,
       date_initial: updateSchedulesDto?.date_initial,
       date_end: updateSchedulesDto?.date_end,
-      ...(updateSchedulesDto?.type_work_id !== undefined && {
-        type_work: { id: updateSchedulesDto.type_work_id },
-      }),
     };
 
     const schedules = await this.schedulesRepository.preload({

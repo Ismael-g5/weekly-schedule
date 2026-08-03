@@ -8,5 +8,6 @@ import { TypesWork } from './entities/types_work.entity';
   imports: [TypeOrmModule.forFeature([TypesWork])],
   controllers: [TypesWorkController],
   providers: [TypesWorkService],
+  exports: [TypesWorkService],
 })
 export class TypesWorkModule {}

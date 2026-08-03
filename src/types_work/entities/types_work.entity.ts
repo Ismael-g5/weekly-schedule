@@ -1,4 +1,4 @@
-import { Schedules } from 'src/schedules/entities/schedules.entity';
+import { ScheduleItem } from 'src/schedule_items/entities/schedule_item.entity';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
@@ -7,14 +7,14 @@ export class TypesWork {
     @PrimaryGeneratedColumn()
     id?: number;
 
-    @Column({unique: true})
+    @Column({ unique: true })
     name?: string;
 
-    @Column({unique: true})
+    @Column({ unique: true })
     type_event?: string;
 
-    @OneToMany(() => Schedules, (schedule) => schedule.type_work)
-    schedules?: Schedules[];
+    @OneToMany(() => ScheduleItem, (item) => item.type_work)
+    schedule_items?: ScheduleItem[];
 
     @CreateDateColumn()
     created_at?: Date;
@@ -23,4 +23,3 @@ export class TypesWork {
     updated_at?: Date;
 
 }
-

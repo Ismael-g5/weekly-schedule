@@ -8,5 +8,6 @@ import { Schedules } from './entities/schedules.entity';
   imports: [TypeOrmModule.forFeature([Schedules])],
   controllers: [SchedulesController],
   providers: [SchedulesService],
+  exports: [SchedulesService], // serve para exportar o module schedules para outras partes
 })
 export class SchedulesModule {}

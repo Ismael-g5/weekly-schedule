@@ -1,5 +1,5 @@
-import { TypesWork } from 'src/types_work/entities/types_work.entity';
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { ScheduleItem } from 'src/schedule_items/entities/schedule_item.entity';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class Schedules {
@@ -13,15 +13,14 @@ export class Schedules {
     @Column({ nullable: true })
     description?: string;
 
-    @Column({ type: 'datetime' })
+    @Column({ type: 'date' })
     date_initial?: Date;
 
-    @Column({ type: 'datetime' })
+    @Column({ type: 'date' })
     date_end?: Date;
 
-    @ManyToOne(() => TypesWork, (typeWork) => typeWork.schedules)
-    @JoinColumn({ name: 'type_work_id' })
-    type_work?: TypesWork;
+    @OneToMany(() => ScheduleItem, (item) => item.schedule)
+    items?: ScheduleItem[];
 
     @CreateDateColumn()
     created_at?: Date;
