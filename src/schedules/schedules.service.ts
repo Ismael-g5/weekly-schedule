@@ -3,6 +3,7 @@ import { CreateSchedulesDto } from './dto/create-schedules.dto';
 import { UpdateSchedulesDto } from './dto/update-schedules.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Schedules } from './entities/schedules.entity';
+import { ScheduleItem } from 'src/schedule_items/entities/schedule_item.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -12,6 +13,51 @@ export class SchedulesService {
     @InjectRepository(Schedules)
     private readonly schedulesRepository: Repository<Schedules>,
   ) { }
+
+  private static readonly DAY_NAMES = [
+    'Domingo',
+    'Segunda',
+    'Terça',
+    'Quarta',
+    'Quinta',
+    'Sexta',
+    'Sábado',
+  ] as const;
+
+  /**
+   * day_of_week no banco: 0=Dom … 6=Sáb (padrão JS).
+   * Ordenação desejada: Segunda → Domingo (1,2,3,4,5,6,0).
+   */
+  private mondayFirstRank(dayOfWeek: number): number {
+    return dayOfWeek === 0 ? 7 : dayOfWeek;
+  }
+
+  private sortItemsMondayToSunday(items: ScheduleItem[] = []): ScheduleItem[] {
+    return [...items].sort((a, b) => {
+      const dayDiff =
+        this.mondayFirstRank(a.day_of_week ?? 0) -
+        this.mondayFirstRank(b.day_of_week ?? 0);
+      if (dayDiff !== 0) return dayDiff;
+      return (a.starts_at ?? '').localeCompare(b.starts_at ?? '');
+    });
+  }
+
+  private withDayName(item: ScheduleItem) {
+    const day = item.day_of_week ?? 0;
+    return {
+      ...item,
+      day_name: SchedulesService.DAY_NAMES[day] ?? 'Desconhecido',
+    };
+  }
+
+  private withSortedItems(schedule: Schedules) {
+    return {
+      ...schedule,
+      items: this.sortItemsMondayToSunday(schedule.items).map((item) =>
+        this.withDayName(item),
+      ),
+    };
+  }
 
   async create(createSchedulesDto: CreateSchedulesDto) {
     const schedules = {
@@ -26,7 +72,7 @@ export class SchedulesService {
   }
 
   async findAll() {
-    return this.schedulesRepository.find({
+    const schedules = await this.schedulesRepository.find({
       relations: {
         items: {
           type_work: true,
@@ -36,6 +82,7 @@ export class SchedulesService {
         id: 'desc',
       },
     });
+    return schedules.map((schedule) => this.withSortedItems(schedule));
   }
 
   async findOne(id: number) {
@@ -50,7 +97,7 @@ export class SchedulesService {
     if (!schedules) {
       throw new NotFoundException(`Erro ao encontrar o agendamento: Agendamento não encontrado.`);
     }
-    return schedules;
+    return this.withSortedItems(schedules);
   }
 
   async update(id: number, updateSchedulesDto: UpdateSchedulesDto) {

@@ -6,6 +6,6 @@ export class CreateTypesWorkDto {
 
     @IsNotEmpty()
     type_event?: string;
-
+  
 
 }
