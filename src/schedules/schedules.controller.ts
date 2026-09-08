@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, UseInterceptors } from '@nestjs/common';
 import { SchedulesService } from './schedules.service';
 import { CreateSchedulesDto } from './dto/create-schedules.dto';
 import { UpdateSchedulesDto } from './dto/update-schedules.dto';
@@ -6,6 +6,8 @@ import { UpdateSchedulesDto } from './dto/update-schedules.dto';
 
 //pipes
 import { ParseIntIdPipe } from '../common/pipes/parse-int-id.pipe';
+import { AddHeaderInterceptor } from 'src/common/interceptors/add-header-interceptor';
+import { TimingConnectionInterceptor } from 'src/common/interceptors/timing-connection.interceptor';
 @Controller('schedules')
 @UsePipes(ParseIntIdPipe) // Aplica o pipe a todos os métodos do controller
 export class SchedulesController {
@@ -17,6 +19,8 @@ export class SchedulesController {
   }
 
   @Get()
+  //@UseInterceptors(AddHeaderInterceptor)
+  @UseInterceptors(TimingConnectionInterceptor)
   findAll() {
     return this.schedulesService.findAll();
   }
