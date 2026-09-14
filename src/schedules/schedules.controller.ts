@@ -8,6 +8,7 @@ import { UpdateSchedulesDto } from './dto/update-schedules.dto';
 import { ParseIntIdPipe } from '../common/pipes/parse-int-id.pipe';
 import { AddHeaderInterceptor } from 'src/common/interceptors/add-header-interceptor';
 import { TimingConnectionInterceptor } from 'src/common/interceptors/timing-connection.interceptor';
+import { ErrorHandlingInterceptor } from 'src/common/interceptors/error-handling.interceptor';
 @Controller('schedules')
 @UsePipes(ParseIntIdPipe) // Aplica o pipe a todos os métodos do controller
 export class SchedulesController {
@@ -20,7 +21,7 @@ export class SchedulesController {
 
   @Get()
   //@UseInterceptors(AddHeaderInterceptor)
-  @UseInterceptors(TimingConnectionInterceptor)
+  @UseInterceptors(TimingConnectionInterceptor, ErrorHandlingInterceptor)
   findAll() {
     return this.schedulesService.findAll();
   }
